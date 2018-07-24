@@ -59,15 +59,19 @@ extension UIView {
     
     fileprivate func recursiveShowSkeleton(withType type: SkeletonType, usingColors colors: [UIColor], animated: Bool, animation: SkeletonLayerAnimation?) {
         addDummyDataSourceIfNeeded()
-        recursiveSearch(inArray: subviewsSkeletonables,
-                        leafBlock: {
-                            guard !isSkeletonActive else { return }
-                            isUserInteractionEnabled = false
-                            saveViewState()
-                            (self as? PrepareForSkeleton)?.prepareViewForSkeleton()
-                            addSkeletonLayer(withType: type, usingColors: colors, animated: animated, animation: animation)
-        }) {
-            $0.recursiveShowSkeleton(withType: type, usingColors: colors, animated: animated, animation: animation)
+        DispatchQueue.main.async { [weak self] in
+            if let strongSelf = self {
+                strongSelf.recursiveSearch(inArray: strongSelf.subviewsSkeletonables,
+                                           leafBlock: {
+                                            guard !strongSelf.isSkeletonActive else { return }
+                                            strongSelf.isUserInteractionEnabled = false
+                                            strongSelf.saveViewState()
+                                            (self as? PrepareForSkeleton)?.prepareViewForSkeleton()
+                                            strongSelf.addSkeletonLayer(withType: type, usingColors: colors, animated: animated, animation: animation)
+                }) {
+                    $0.recursiveShowSkeleton(withType: type, usingColors: colors, animated: animated, animation: animation)
+                }
+            }
         }
     }
     
